@@ -4,6 +4,12 @@
 
 Self-hosted lightweight security operations platform. 基于 Monitor 3.0，保留 `monitor3` 命令和配置名称以兼容现有部署。
 
+<img width="2559" height="1344" alt="image" src="https://github.com/user-attachments/assets/05bbe39e-0a89-4147-a465-db4f8361f498" />
+
+<img width="2559" height="1347" alt="image" src="https://github.com/user-attachments/assets/da071565-5925-4651-8551-89a4020b66b8" />
+
+
+
 轻量级、可自部署的安全监控与态势展示平台。集中处理设备日志、告警研判、VPN 活动和资产状态，适合单节点部署及二次开发。
 
 > 默认关闭自动防火墙执行、通知和 AI。首次部署无真实数据时看板为空，不会生成伪造告警。请先在测试环境验证，勿直接连接未经授权的设备。
