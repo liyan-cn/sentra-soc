@@ -1,0 +1,9 @@
+apiVersion: 1
+providers:
+  - name: Monitor 3.0
+    folder: Security Operations
+    type: file
+    disableDeletion: true
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

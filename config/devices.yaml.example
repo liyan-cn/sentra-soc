@@ -1,0 +1,24 @@
+# Copy to devices.yaml, then adapt paths to YOUR log layout.
+# Paths in containers refer to /logs, not the host's path.
+devices:
+  - id: huawei-ips-01
+    source: HUAWEI_IPS
+    parser: huawei_ips
+    log_glob: /logs/huawei-ips/*.log
+    enabled: true
+    start_at_end: false
+    batch_size: 100
+  - id: dptech-waf-01
+    source: DPTECH_WAF
+    parser: dptech_waf
+    log_glob: /logs/dptech-waf/*.log
+    enabled: true
+    start_at_end: false
+  - id: vpn-01
+    source: HUAWEI_VPN
+    log_glob: /logs/vpn/activity/*.log
+    login_audit_glob: /logs/vpn/login/*.log
+    enabled: true
+    start_at_end: false
+    max_checkpoint_lag_seconds: 86400
+# Never list a VPN-only entry as MONITOR_DEVICE_ID; use MONITOR_VPN_DEVICE_ID.

@@ -1,0 +1,94 @@
+x-monitor-env: &monitor-env
+  MONITOR_CONFIG: ${MONITOR_CONFIG_PATH:-/opt/monitor3/config/base.yaml}
+  MONITOR_DEVICES_CONFIG: /opt/monitor3/config/devices.yaml
+  MONITOR_DB_PATH: /var/lib/monitor3/monitor.db
+  MONITOR_ADMIN_TOKEN: ${MONITOR_ADMIN_TOKEN:?Set MONITOR_ADMIN_TOKEN in .env}
+x-monitor: &monitor
+  build: .
+  environment: *monitor-env
+  volumes:
+    - monitor-data:/var/lib/monitor3
+    - ./config:/opt/monitor3/config:ro
+    - ${MONITOR_LOG_ROOT:-./logs}:/logs:ro
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *monitor
+    environment:
+      <<: *monitor-env
+      MONITOR_API_HOST: 0.0.0.0
+    ports: ["127.0.0.1:5001:5001"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/health/live', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  action:
+    <<: *monitor
+    command: ["monitor3-action"]
+    environment:
+      <<: *monitor-env
+      MONITOR_FIREWALL_PASSWORD: ${MONITOR_FIREWALL_PASSWORD:-}
+      MONITOR_WECHAT_WEBHOOK: ${MONITOR_WECHAT_WEBHOOK:-}
+      MONITOR_SMTP_PASSWORD: ${MONITOR_SMTP_PASSWORD:-}
+      MONITOR_WEBHOOK_URL: ${MONITOR_WEBHOOK_URL:-}
+      MONITOR_WEBHOOK_SECRET: ${MONITOR_WEBHOOK_SECRET:-}
+    depends_on:
+      api: {condition: service_healthy}
+  maintenance:
+    <<: *monitor
+    command: ["monitor3-maintenance"]
+    depends_on:
+      api: {condition: service_healthy}
+  collector:
+    <<: *monitor
+    profiles: [collectors]
+    command: ["monitor3-collector", "--device", "${MONITOR_DEVICE_ID:-huawei-ips-01}"]
+    depends_on:
+      api: {condition: service_healthy}
+  vpn:
+    <<: *monitor
+    profiles: [vpn]
+    command: ["monitor3-vpn", "--device", "${MONITOR_VPN_DEVICE_ID:-vpn-01}"]
+    depends_on:
+      api: {condition: service_healthy}
+  host:
+    <<: *monitor
+    profiles: [host-monitoring]
+    command: ["monitor3-host"]
+    depends_on:
+      api: {condition: service_healthy}
+  backup:
+    <<: *monitor
+    profiles: [tools]
+    command: ["python", "-m", "monitor.workers.backup_worker"]
+    restart: "no"
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=30d"]
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/monitoring/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    ports: ["127.0.0.1:9090:9090"]
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:12.1.0
+    profiles: [monitoring]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    entrypoint: ["/bin/sh", "-ec", "[ -n \"$${GF_SECURITY_ADMIN_PASSWORD}\" ] && exec /run.sh"]
+    volumes:
+      - ./deploy/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports: ["127.0.0.1:3000:3000"]
+    restart: unless-stopped
+volumes:
+  monitor-data:
+  prometheus-data:
+  grafana-data:

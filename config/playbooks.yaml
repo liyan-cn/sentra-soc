@@ -1,0 +1,16 @@
+# 剧本默认全部关闭。先通过历史日志回放和灰度验证，再逐条 enabled: true。
+playbooks:
+  - id: example-close-known-health-check
+    name: 已确认健康检查自动关闭
+    enabled: false
+    priority: 100
+    trigger: review_created
+    match:
+      decision: MANUAL_REVIEW
+      source: DPTECH_WAF
+      category_regex: "health.?check|健康检查"
+      severity: low
+      count_lte: 20
+    actions:
+      - type: close_review
+        reason: 已确认的低风险健康检查，由剧本自动关闭

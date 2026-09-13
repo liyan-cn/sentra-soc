@@ -1,0 +1,45 @@
+version: 1
+# Offline rules for turning generic URL/traffic classification records into security events.
+# These are intentionally high-confidence. Normal URL classification is telemetry, not an attack.
+url_rules:
+  - id: web-sql-injection
+    category: SQL_INJECTION
+    severity: high
+    mitre: T1190
+    patterns:
+      - "(?:union(?:\\s|%20)+(?:all(?:\\s|%20)+)?select|select(?:\\s|%20)+.+(?:from|where)|(?:or|and)(?:\\s|%20)+[\\'\"]?\\d+[\\'\"]?(?:\\s|%20)*=(?:\\s|%20)*[\\'\"]?\\d+)"
+      - "(?:sleep|benchmark|pg_sleep|waitfor(?:\\s|%20)+delay)\\s*\\("
+  - id: web-xss
+    category: XSS
+    severity: high
+    mitre: T1190
+    patterns:
+      - "<(?:script|iframe|svg|img)[^>]*(?:onerror|onload|javascript:|src=)"
+      - "(?:javascript:|document\\.cookie|alert\\s*\\()"
+  - id: web-path-traversal
+    category: PATH_TRAVERSAL
+    severity: high
+    mitre: T1190
+    patterns:
+      - "(?:\\.\\./){2,}|(?:%2e%2e(?:%2f|/)){2,}"
+      - "(?:/etc/passwd|/proc/self/environ|win\\.ini|boot\\.ini)"
+  - id: web-command-injection
+    category: COMMAND_INJECTION
+    severity: critical
+    mitre: T1059
+    patterns:
+      - "(?:;|\\||&&|`)(?:\\s|%20)*(?:curl|wget|bash|sh|powershell|cmd(?:\\.exe)?|nc)(?:\\s|%20)"
+      - "(?:/bin/(?:sh|bash)|cmd\\.exe|powershell(?:\\.exe)?)"
+  - id: web-jndi-injection
+    category: JNDI_INJECTION
+    severity: critical
+    mitre: T1190
+    patterns:
+      - "\\$\\{jndi:(?:ldap|rmi|dns|iiop):"
+  - id: web-sensitive-file-probe
+    category: SENSITIVE_FILE_PROBE
+    severity: medium
+    mitre: T1595
+    patterns:
+      - "(?:^|[/?])(?:\\.env|\\.git/config|wp-config\\.php|actuator/env|server-status|phpinfo\\.php)(?:$|[?&/ ])"
+      - "(?:/vendor/phpunit|/cgi-bin/.*(?:sh|bash)|/boaform/admin)"

@@ -1,0 +1,26 @@
+.quality-meter { display:flex; align-items:center; gap:8px; min-width:130px; }
+.quality-meter > i { width:72px; height:5px; background:#102c3b; overflow:hidden; }
+.quality-meter > i::after { content:""; display:block; width:var(--quality); height:100%; background:var(--cyan); }
+.quality-meter.low > i::after { background:#ff9d2e; }
+.quality-note { color:var(--muted); font-size:11px; line-height:1.6; }
+.automation-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
+.automation-summary > div { border:1px solid var(--line); background:rgba(10,28,40,.88); padding:13px; }
+.automation-summary span { color:var(--muted); font-size:11px; }
+.automation-summary b { display:block; color:var(--text); font-size:24px; margin-top:5px; }
+.automation-editor { margin-top:12px; padding:14px; border:1px solid var(--line); background:rgba(4,17,26,.95); }
+.automation-editor textarea { width:100%; min-height:270px; resize:vertical; font:12px/1.65 Consolas,monospace; }
+.automation-editor .editor-actions { display:flex; gap:8px; margin-top:10px; }
+.replay-result { margin-top:12px; padding:12px; border-left:3px solid var(--cyan); background:#0b2533; white-space:pre-wrap; }
+.mode-banner { margin-bottom:12px; padding:10px 14px; border:1px solid #1b6272; color:#8cecf5; background:rgba(9,49,61,.6); }
+.automation-dialog { width:min(520px,calc(100vw - 32px)); padding:0; color:var(--text); border:1px solid var(--line); background:#071923; box-shadow:0 24px 80px rgba(0,0,0,.65); }
+.automation-dialog::backdrop { background:rgba(0,10,16,.78); backdrop-filter:blur(3px); }
+.automation-dialog form { display:grid; gap:15px; padding:20px; }
+.automation-dialog .dialog-head { display:flex; align-items:center; justify-content:space-between; }
+.automation-dialog .dialog-head h2 { margin:0; font-size:20px; }
+.automation-dialog .dialog-close { width:34px; min-width:34px; padding:4px; font-size:22px; background:transparent; color:var(--muted); border:0; }
+.automation-dialog label { display:grid; gap:7px; color:var(--muted); font-size:13px; }
+.automation-dialog select,.automation-dialog input,.automation-dialog textarea { width:100%; box-sizing:border-box; color:var(--text); border:1px solid var(--line); background:#0b2230; padding:10px 12px; font:inherit; }
+.automation-dialog textarea { min-height:84px; resize:vertical; }
+.automation-dialog option { background:#0b2230; color:var(--text); }
+.automation-dialog .editor-actions { display:flex; gap:9px; justify-content:flex-end; }
+@media(max-width:900px){.automation-summary{grid-template-columns:repeat(2,1fr)}}

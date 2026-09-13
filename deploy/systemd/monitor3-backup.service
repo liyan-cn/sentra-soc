@@ -1,0 +1,19 @@
+[Unit]
+Description=Monitor 3.0 verified SQLite backup
+After=monitor3-api.service
+
+[Service]
+Type=oneshot
+User=monitor3
+Group=monitor3
+WorkingDirectory=/opt/monitor3
+EnvironmentFile=/etc/monitor3/monitor3.env
+ExecStart=/opt/monitor3/.venv/bin/python -m monitor.workers.backup_worker
+TimeoutStartSec=90min
+Nice=10
+IOSchedulingClass=idle
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/monitor3

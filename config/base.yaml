@@ -1,0 +1,91 @@
+app:
+  environment: development
+  timezone: Asia/Shanghai
+  data_dir: ./data
+database:
+  driver: sqlite
+  path: ./data/monitor.db
+  busy_timeout_ms: 10000
+backup:
+  keep_last: 14
+  max_age_hours: 30
+operations:
+  min_free_disk_mb: 512
+api:
+  host: 127.0.0.1
+  port: 5001
+  admin_token: ""
+  max_request_bytes: 1048576
+  auth_rate_limit_per_minute: 120
+  token_usage_update_seconds: 300
+  # Only enable when that exact number of trusted reverse proxies is deployed.
+  trusted_proxy_hops: 0
+policy:
+  # Optional region that requires manual review instead of automatic blocking.
+  local_region: ""
+  geo_unknown_action: review
+  rules_file: ./config/rules.yaml
+notification:
+  provider: wechat
+  enabled: false
+  webhook: ""
+  # Generic webhook uses `url`; SMTP uses host/from/to and password from MONITOR_SMTP_PASSWORD.
+  # Set provider=fanout and add `channels: [{provider: wechat, ...}, ...]` for multi-channel delivery.
+  require_all: true
+  min_interval_seconds: 0
+firewall:
+  provider: huawei_ssh
+  # disabled: do not claim firewall tasks; dry_run: simulate; live: execute and verify
+  mode: disabled
+  host: ""
+  port: 22
+  username: ""
+  password: ""
+  known_hosts: ./config/known_hosts
+  timeout_minutes: 10000
+  command_timeout_seconds: 10
+  # nftables provider options: family=inet, table=filter, set=monitor3_blocklist.
+geolocation:
+  provider: ip_api
+  endpoint: http://ip-api.com/json/{ip}?lang=zh-CN
+  ttl_days: 7
+  timeout_seconds: 3
+  failure_ttl_minutes: 60
+  failure_threshold: 5
+  circuit_breaker_seconds: 60
+threat_intelligence:
+  provider: static
+  indicators: []
+  # - network: 203.0.113.10/32
+  #   tags: [scanner, botnet]
+  #   confidence: 90
+  #   source: local-soc
+workers:
+  poll_seconds: 2
+  lease_seconds: 60
+  heartbeat_seconds: 30
+health:
+  # Add deployed worker names here when API readiness must depend on them.
+  required_services: []
+  heartbeat_max_age_seconds: 180
+retention:
+  security_events_days: 180
+  parse_failures_days: 30
+  host_checks_days: 30
+  vpn_sessions_days: 180
+  notification_logs_days: 90
+  audit_logs_days: 365
+  batch_size: 1000
+  aggregate_days: 2
+  interval_seconds: 300
+ai:
+  enabled: false
+  provider: openai_compatible
+  base_url: https://api.openai.com/v1
+  api_mode: responses
+  model: gpt-5.6-terra
+  reasoning_effort: medium
+  timeout_seconds: 60
+  privacy_mode: aggregate_only
+devices: []
+hosts: []

@@ -1,0 +1,45 @@
+groups:
+  - name: monitor3
+    rules:
+      - alert: Monitor3ApiDown
+        expr: up{job="monitor3"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: Monitor 3.0 API is unavailable
+          description: Prometheus has failed to scrape Monitor 3.0 for two minutes.
+      - alert: Monitor3WorkerUnhealthy
+        expr: monitor3_services_unhealthy > 0
+        for: 3m
+        labels: {severity: critical}
+        annotations:
+          summary: Monitor 3.0 worker heartbeat is unhealthy
+          description: One or more workers are unhealthy or their heartbeat is stale.
+      - alert: Monitor3DeadActions
+        expr: monitor3_actions_dead > 0
+        for: 5m
+        labels: {severity: critical}
+        annotations:
+          summary: Monitor 3.0 has dead actions
+          description: At least one enforcement or notification task exhausted all retries.
+      - alert: Monitor3ActionBacklog
+        expr: monitor3_actions_oldest_age_seconds > 300
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: Monitor 3.0 action queue is delayed
+          description: The oldest runnable action has waited for more than five minutes.
+      - alert: Monitor3DatabaseLarge
+        expr: monitor3_database_bytes > 5368709120
+        for: 30m
+        labels: {severity: warning}
+        annotations:
+          summary: Monitor 3.0 SQLite database exceeds 5 GiB
+          description: Review retention settings and available filesystem capacity.
+      - alert: Monitor3HostsOffline
+        expr: monitor3_hosts_offline > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: Monitored hosts are offline
+          description: At least one monitored host is currently marked offline.

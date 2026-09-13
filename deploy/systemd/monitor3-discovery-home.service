@@ -1,0 +1,23 @@
+[Unit]
+Description=Monitor 3.0 Syslog Device Discovery and Dynamic Collector
+After=network.target rsyslog.service
+Wants=rsyslog.service
+
+[Service]
+Type=simple
+User=monitor3
+Group=monitor3
+WorkingDirectory=/home/monitor3.0
+EnvironmentFile=/etc/monitor3/monitor3.env
+ExecStart=/home/monitor3.0/.venv/bin/monitor3-discovery
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/home/syslog
+ReadWritePaths=/home/monitor3.0/data
+
+[Install]
+WantedBy=multi-user.target

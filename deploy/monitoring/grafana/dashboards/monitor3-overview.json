@@ -1,0 +1,24 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "panels": [
+    {"type":"stat","title":"Security Events","id":1,"gridPos":{"h":5,"w":4,"x":0,"y":0},"targets":[{"expr":"monitor3_events_total","refId":"A"}]},
+    {"type":"stat","title":"Active Blacklist","id":2,"gridPos":{"h":5,"w":4,"x":4,"y":0},"targets":[{"expr":"monitor3_blacklist_active","refId":"A"}]},
+    {"type":"stat","title":"Open Reviews","id":3,"gridPos":{"h":5,"w":4,"x":8,"y":0},"targets":[{"expr":"monitor3_reviews_open","refId":"A"}]},
+    {"type":"stat","title":"Pending Actions","id":4,"gridPos":{"h":5,"w":4,"x":12,"y":0},"targets":[{"expr":"monitor3_actions_pending","refId":"A"}]},
+    {"type":"stat","title":"Dead Actions","id":5,"gridPos":{"h":5,"w":4,"x":16,"y":0},"targets":[{"expr":"monitor3_actions_dead","refId":"A"}]},
+    {"type":"stat","title":"Unhealthy Services","id":6,"gridPos":{"h":5,"w":4,"x":20,"y":0},"targets":[{"expr":"monitor3_services_unhealthy","refId":"A"}]},
+    {"type":"timeseries","title":"Worker Heartbeat Age","id":7,"gridPos":{"h":8,"w":12,"x":0,"y":5},"targets":[{"expr":"monitor3_service_heartbeat_age_seconds","legendFormat":"{{service}}","refId":"A"}]},
+    {"type":"timeseries","title":"Action Queue Age","id":8,"gridPos":{"h":8,"w":12,"x":12,"y":5},"targets":[{"expr":"monitor3_actions_oldest_age_seconds","refId":"A"}]},
+    {"type":"timeseries","title":"SQLite Database Size","id":9,"gridPos":{"h":8,"w":12,"x":0,"y":13},"fieldConfig":{"defaults":{"unit":"bytes"}},"targets":[{"expr":"monitor3_database_bytes","refId":"A"}]},
+    {"type":"timeseries","title":"Offline Hosts and Active VPN","id":10,"gridPos":{"h":8,"w":12,"x":12,"y":13},"targets":[{"expr":"monitor3_hosts_offline","legendFormat":"offline hosts","refId":"A"},{"expr":"monitor3_vpn_active","legendFormat":"active VPN","refId":"B"}]}
+  ],
+  "schemaVersion": 39,
+  "tags": ["monitor3", "security"],
+  "templating": {"list": []},
+  "time": {"from":"now-6h","to":"now"},
+  "timezone": "browser",
+  "title": "Monitor 3.0 Overview",
+  "uid": "monitor3-overview",
+  "version": 1
+}

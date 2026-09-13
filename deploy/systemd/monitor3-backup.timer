@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Monitor 3.0 verified backup daily
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=monitor3-backup.service
+
+[Install]
+WantedBy=timers.target

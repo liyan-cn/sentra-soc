@@ -1,0 +1,22 @@
+[Unit]
+Description=Monitor 3.0 Huawei Firewall List Mirror
+After=network-online.target monitor3-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=monitor3
+Group=monitor3
+WorkingDirectory=/home/monitor3.0
+EnvironmentFile=/etc/monitor3/monitor3.env
+ExecStart=/home/monitor3.0/.venv/bin/monitor3-firewall-sync
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/monitor3.0/data
+
+[Install]
+WantedBy=multi-user.target

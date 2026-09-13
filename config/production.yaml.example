@@ -1,0 +1,42 @@
+# Monitor 3.0 production overrides. Unspecified values inherit packaged safe defaults.
+app:
+  environment: production
+  timezone: Asia/Shanghai
+  data_dir: /var/lib/monitor3
+
+database:
+  driver: sqlite
+  path: /var/lib/monitor3/monitor.db
+  busy_timeout_ms: 10000
+
+api:
+  host: 127.0.0.1
+  port: 5001
+  # Keep zero unless requests pass through exactly one trusted reverse proxy.
+  trusted_proxy_hops: 0
+
+policy:
+  rules_file: /etc/monitor3/rules.yaml
+  local_region: ""
+
+firewall:
+  mode: disabled
+  provider: huawei_ssh
+  host: ""
+  username: ""
+  known_hosts: /etc/monitor3/known_hosts
+
+notification:
+  enabled: false
+  provider: wechat
+
+health:
+  required_services: [action-worker, maintenance-worker]
+  heartbeat_max_age_seconds: 180
+
+backup:
+  keep_last: 14
+  max_age_hours: 30
+
+operations:
+  min_free_disk_mb: 2048

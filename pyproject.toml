@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monitor3"
+version = "3.0.0"
+description = "Modular security monitoring and automated firewall response"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["security", "syslog", "monitoring", "vpn", "soc"]
+requires-python = ">=3.11"
+dependencies = [
+  "Flask>=3.0,<4",
+  "PyYAML>=6.0,<7",
+  "requests>=2.31,<3",
+  "paramiko>=3.4,<4",
+  "psutil>=5.9,<7",
+  "cryptography>=42,<50",
+  "gunicorn>=22,<24; platform_system != 'Windows'",
+  "waitress>=3.0,<4; platform_system == 'Windows'"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
+[project.scripts]
+monitor3 = "monitor.cli:main"
+monitor3-api = "monitor.api.app:main"
+monitor3-collector = "monitor.workers.collector_worker:main"
+monitor3-action = "monitor.workers.action_worker:main"
+monitor3-vpn = "monitor.workers.vpn_worker:main"
+monitor3-host = "monitor.workers.host_worker:main"
+monitor3-maintenance = "monitor.workers.maintenance_worker:main"
+monitor3-firewall-sync = "monitor.workers.firewall_sync_worker:main"
+monitor3-discovery = "monitor.workers.discovery_worker:main"
+
+[project.entry-points."monitor3.parsers"]
+# Third-party packages add their parser factories to this group.
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"monitor.migrations" = ["*.sql"]
+"monitor.resources" = ["*.yaml", "*.html", "*.css", "*.js"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

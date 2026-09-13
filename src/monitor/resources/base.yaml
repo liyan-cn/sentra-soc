@@ -1,0 +1,80 @@
+app:
+  environment: development
+  timezone: UTC
+  data_dir: ~/.monitor3
+database:
+  driver: sqlite
+  path: ~/.monitor3/monitor.db
+  busy_timeout_ms: 10000
+backup:
+  keep_last: 14
+  max_age_hours: 30
+operations:
+  min_free_disk_mb: 512
+api:
+  host: 127.0.0.1
+  port: 5001
+  admin_token: ""
+  max_request_bytes: 1048576
+  auth_rate_limit_per_minute: 120
+  token_usage_update_seconds: 300
+  trusted_proxy_hops: 0
+policy:
+  local_region: ""
+  geo_unknown_action: review
+  rules_file: rules.yaml
+notification:
+  provider: wechat
+  enabled: false
+  webhook: ""
+  require_all: true
+  min_interval_seconds: 0
+firewall:
+  provider: huawei_ssh
+  mode: disabled
+  host: ""
+  port: 22
+  username: ""
+  password: ""
+  known_hosts: ""
+  timeout_minutes: 10000
+  command_timeout_seconds: 10
+geolocation:
+  provider: ip_api
+  endpoint: http://ip-api.com/json/{ip}?lang=zh-CN
+  ttl_days: 7
+  timeout_seconds: 3
+  failure_ttl_minutes: 60
+  failure_threshold: 5
+  circuit_breaker_seconds: 60
+threat_intelligence:
+  provider: static
+  indicators: []
+workers:
+  poll_seconds: 2
+  lease_seconds: 60
+  heartbeat_seconds: 30
+health:
+  required_services: []
+  heartbeat_max_age_seconds: 180
+retention:
+  security_events_days: 180
+  parse_failures_days: 30
+  host_checks_days: 30
+  vpn_sessions_days: 180
+  notification_logs_days: 90
+  audit_logs_days: 365
+  batch_size: 1000
+  aggregate_days: 2
+  interval_seconds: 300
+ai:
+  enabled: false
+  provider: openai_compatible
+  base_url: https://api.openai.com/v1
+  api_mode: responses
+  model: gpt-5.6-terra
+  reasoning_effort: medium
+  timeout_seconds: 60
+  privacy_mode: aggregate_only
+devices: []
+hosts: []

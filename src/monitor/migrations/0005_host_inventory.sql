@@ -1,0 +1,3 @@
+ALTER TABLE hosts ADD COLUMN kind TEXT NOT NULL DEFAULT 'vm';
+ALTER TABLE hosts ADD COLUMN site TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS idx_hosts_kind_status ON hosts(kind,status);

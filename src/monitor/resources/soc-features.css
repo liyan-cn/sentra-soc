@@ -1,0 +1,14 @@
+.soc-nav-group{margin:12px 10px 5px;color:#4f7d93;font-size:9px;letter-spacing:.16em}
+.soc-grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.soc-card{padding:16px;border:1px solid var(--line);background:linear-gradient(150deg,rgba(13,29,42,.96),rgba(6,17,26,.96))}
+.soc-card span{display:block;color:var(--muted);font-size:11px}.soc-card strong{display:block;margin-top:8px;color:var(--cyan);font-size:25px}
+.soc-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.soc-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.soc-toolbar .spacer{flex:1}.soc-note{padding:12px 14px;border-left:3px solid var(--cyan);background:rgba(19,56,70,.42);color:#b9d3df;font-size:12px;line-height:1.7}
+.ai-result{white-space:pre-wrap;line-height:1.8;padding:16px;color:#d9f4ff;max-height:520px;overflow:auto}
+.mitre{color:#ffb34b;font-family:Consolas,monospace}.soc-muted{color:var(--muted);font-size:11px}
+@media(max-width:1200px){.soc-grid{grid-template-columns:repeat(2,1fr)}.soc-split{grid-template-columns:1fr}}
+body.nav-collapsed .soc-nav-group{display:none}
+.soc-dialog{width:min(720px,calc(100vw - 32px));padding:0;color:var(--text);border:1px solid var(--line);background:#071923;box-shadow:0 25px 90px rgba(0,0,0,.7)}
+.soc-dialog::backdrop{background:rgba(0,8,14,.8);backdrop-filter:blur(3px)}.soc-dialog form{padding:20px}.soc-dialog .dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.soc-dialog .dialog-head h2{margin:0}.soc-dialog .dialog-head button{border:0;background:transparent;color:var(--muted);font-size:24px}
+.soc-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.soc-form-grid label{display:grid;gap:6px;color:var(--muted);font-size:12px}.soc-form-grid .wide{grid-column:1/-1}.soc-form-grid input,.soc-form-grid select{box-sizing:border-box;width:100%;padding:10px 12px;color:var(--text);border:1px solid var(--line);background:#0b2230}.soc-form-grid .check{display:flex;grid-column:1/-1;align-items:center;gap:8px}.soc-form-grid .check input{width:auto}.soc-form-grid fieldset{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;border:1px solid var(--line);padding:12px}.soc-form-grid fieldset legend{color:var(--cyan);padding:0 6px}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+@media(max-width:700px){.soc-form-grid{grid-template-columns:1fr}.soc-form-grid .wide{grid-column:auto}}

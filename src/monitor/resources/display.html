@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Monitor 3.0 · 实时安全态势大屏</title><link rel="stylesheet" href="/display.css?v=20260913-wall2"><link rel="stylesheet" href="/display-fix.css?v=20260913-wall2"></head>
+<body>
+  <div class="screen-grid"></div><div class="scan-beam"></div>
+  <header class="wall-head"><div class="wall-brand"><span>M3</span><div><b>网络安全态势感知中心</b><small>MONITOR 3.0 · SECURITY OPERATIONS</small></div></div><div class="wall-title"><i></i><h1>实时安全态势感知</h1><i></i></div><div class="wall-tools"><span class="live-dot"></span><time id="wallClock">--</time><button id="fullScreen">全屏</button><a href="/">返回控制台</a></div></header>
+  <main class="wall-layout">
+    <section class="kpi-strip"><article><span>24H 安全事件</span><b id="kEvents">0</b><small>EVENTS</small></article><article><span>风险来源</span><b id="kSources">0</b><small>UNIQUE SOURCES</small></article><article><span>联动处置</span><b id="kBlocked">0</b><small>BLOCKED</small></article><article><span>待研判</span><b id="kReviews">0</b><small>REVIEWS</small></article><article><span>在线资产</span><b id="kAssets">0/0</b><small>ASSETS</small></article><article><span>VPN 近期活跃 / 已知公网</span><b id="kVpn">0/0</b><small>SESSIONS</small></article></section>
+    <section class="wall-left">
+      <article class="wall-panel source-panel"><header><h2>多源安全感知</h2><span>24H DATA INGESTION</span></header><div id="wallSources" class="wall-sources"></div></article>
+      <article class="wall-panel trend-panel"><header><h2>攻击趋势</h2><span>24H / 每小时</span></header><div id="wallTrend" class="wall-trend"></div></article>
+      <article class="wall-panel site-panel"><header><h2>机房出口状态</h2><span>ICMP PROBE</span></header><div id="wallSites" class="wall-sites"></div></article>
+    </section>
+    <section class="wall-center">
+      <article class="map-stage"><div class="radar radar-a"></div><div class="radar radar-b"></div><div class="center-core"><small>SECURITY</small><b>数智中心</b><span id="coreEvents">0 EVENTS</span></div><div id="wallMap" class="wall-map"></div><p class="map-caption">全球威胁汇聚 · 多源检测 · 智能研判 · 联动处置</p></article>
+      <article class="wall-panel category-panel"><header><h2>威胁类型分布</h2><span>TOP THREATS</span></header><div id="wallCategories" class="wall-categories"></div></article>
+    </section>
+    <section class="wall-right"><article class="wall-panel risk-wall"><header><h2>最近风险告警</h2><span>LATEST ALERTS</span></header><div id="wallRisks" class="wall-risks"></div></article></section>
+  </main>
+  <footer><span>MONITOR 3.0 SECURITY FABRIC</span><b id="wallStatus">正在连接安全数据总线</b><span id="generatedAt">--</span></footer>
+  <div id="displayAuth" class="display-auth"><form id="displayAuthForm"><div class="auth-logo">M3</div><h2>安全态势展示认证</h2><p>输入只读或更高权限的访问令牌。令牌仅保存在当前浏览器标签页。</p><input id="displayToken" type="password" autocomplete="off" placeholder="API Token" required><button>进入展示大屏</button><a href="/">返回控制台</a></form></div>
+  <script src="/display.js?v=20260913-wall2" defer></script>
+</body></html>

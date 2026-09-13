@@ -1,0 +1,44 @@
+defaults:
+  window_seconds: 300
+  warn_threshold: 50
+  block_threshold: 100
+  block_minutes: 10000
+rules:
+  HUAWEI_WAF:
+    window_seconds: 30
+    warn_threshold: 10
+    block_threshold: 30
+  HUAWEI_IPS:
+    window_seconds: 30
+    warn_threshold: 10
+    block_threshold: 30
+  DPTECH_WAF:
+    window_seconds: 300
+    warn_threshold: 50
+    block_threshold: 100
+  DPTECH_IPS:
+    window_seconds: 30
+    warn_threshold: 500
+    block_threshold: null
+  TOPSEC_WAF:
+    window_seconds: 300
+    warn_threshold: 50
+    block_threshold: 100
+
+# Optional priority-ordered policies. When this list is non-empty it replaces
+# the legacy warn/block threshold decision logic above. Examples:
+policies: []
+#  - id: critical-c2
+#    priority: 200
+#    match:
+#      category_regex: "C2|Trojan|Backdoor"
+#      count_gte: 1
+#      geo_status: known
+#    decision: BLOCK
+#    duration_minutes: 7d
+#  - id: unknown-location-review
+#    priority: 100
+#    match:
+#      count_gte: 50
+#      geo_status: unknown
+#    decision: MANUAL_REVIEW

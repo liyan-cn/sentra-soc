@@ -1,0 +1,15 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const nodes=new Map();const get=s=>{if(!nodes.has(s))nodes.set(s,{innerHTML:'',addEventListener(){}});return nodes.get(s)};
+const ctx=vm.createContext({document:{querySelector:get},sessionStorage:{getItem:()=>''},setInterval(){}});
+vm.runInContext(fs.readFileSync('src/monitor/resources/display-wall.js','utf8'),ctx);
+vm.runInContext(`renderTrend([{hour:'2026-09-13T08',events:12}], '2026-09-13T08:45:00Z')`,ctx);
+assert.equal((get('#wallTrend').innerHTML.match(/class="trend-bar"/g)||[]).length,25);
+assert.match(get('#wallTrend').innerHTML,/height="162"/);
+assert.match(get('#wallTrend').innerHTML,/12 条告警/);
+assert.ok(!get('#wallTrend').innerHTML.includes('style='));
+vm.runInContext(`renderTrend([], '2026-09-13T08:45:00Z')`,ctx);
+assert.match(get('#wallTrend').innerHTML,/该时间段没有安全告警/);
+assert.ok(!get('#wallTrend').innerHTML.includes('NaN'));
+vm.runInContext(`renderSources([{source:'WAF',events:8,processed_lines:0}])`,ctx);
+assert.match(get('#wallSources').innerHTML,/>8<small>安全告警/);
+console.log('Wall chart: 25 hourly buckets, visible SVG bars, honest empty state, source metrics passed');

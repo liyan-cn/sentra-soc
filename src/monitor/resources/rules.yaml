@@ -1,0 +1,8 @@
+defaults:
+  window_seconds: 300
+  warn_threshold: 50
+  block_threshold: 100
+  block_minutes: 10000
+rules: {}
+policies: []
+

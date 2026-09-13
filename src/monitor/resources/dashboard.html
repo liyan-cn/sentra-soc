@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Monitor 3.0 安全运营中心与数智中心">
+  <title>Monitor 3.0 · 数智中心</title>
+  <link rel="stylesheet" href="/dashboard.css">
+  <link rel="stylesheet" href="/dashboard-batch.css">
+  <link rel="stylesheet" href="/automation.css">
+  <link rel="stylesheet" href="/soc-features.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">M3</span><div><strong>Monitor 3.0</strong><small>SECURITY INTELLIGENCE CENTER</small></div></div>
+    <div class="global-status"><span class="pulse"></span><span id="clock">--</span><span id="health">正在连接</span><button id="authButton" class="secondary">访问令牌</button></div>
+  </header>
+  <div class="shell">
+    <nav aria-label="主导航">
+      <div class="nav-title"><p class="nav-caption">SECURITY FABRIC</p><button id="navToggle" class="nav-toggle" title="收缩侧栏" aria-label="收缩侧栏">‹</button></div>
+      <div class="nav-scroll">
+        <button class="nav-item active" data-view="overview"><i>◈</i><span class="nav-label">数智中心</span></button>
+        <button class="nav-item" data-view="events"><i>◎</i><span class="nav-label">事件中心</span></button>
+        <button class="nav-item" data-view="reviews"><i>◇</i><span class="nav-label">研判中心</span></button>
+        <button class="nav-item" data-view="lists"><i>⊘</i><span class="nav-label">黑白名单</span></button>
+        <button class="nav-item" data-view="operations"><i>⌁</i><span class="nav-label">设备与运行</span></button>
+      </div>
+      <div class="nav-utility">
+        <a class="nav-item nav-external" href="/screen" target="_blank" rel="noopener"><i>▣</i><span class="nav-label">展示大屏</span></a>
+        <div class="nav-foot"><span>数据面</span><b>ONLINE</b><span>策略面</span><b>SAFE</b></div>
+      </div>
+    </nav>
+    <main>
+      <div class="page-head"><div><p class="eyebrow">CYBER SECURITY SITUATIONAL AWARENESS</p><h1 id="pageTitle">数智中心</h1><p id="pageDescription">统一感知、关联研判与闭环处置</p></div><button id="refreshButton">刷新态势</button></div>
+      <div id="notice" class="notice hidden" role="status"></div>
+      <section id="overview" class="view active">
+        <div id="brainMetrics" class="metric-grid"></div>
+        <div class="command-grid">
+          <article class="panel source-panel"><div class="panel-head"><h2>感知节点</h2><span>24H 数据汇聚</span></div><div id="sourceList" class="source-list"></div></article>
+          <article class="brain-stage">
+            <div class="scan-line"></div><div class="brain-ring ring-a"></div><div class="brain-ring ring-b"></div><div class="brain-ring ring-c"></div>
+            <div class="brain-core"><span>SECURITY</span><strong>数智中心</strong><small id="brainCount">0 EVENTS</small></div>
+            <span class="node n1">WAF</span><span class="node n2">IPS</span><span class="node n3">FIREWALL</span><span class="node n4">VPN</span>
+            <div class="brain-caption"><b>统一事件总线</b><span>标准化 · 关联分析 · 策略决策 · 编排处置</span></div>
+          </article>
+          <article class="panel risk-panel"><div class="panel-head"><h2>实时风险</h2><span>最新 12 条</span></div><div id="riskFeed" class="risk-feed"></div></article>
+        </div>
+        <div class="overview-bottom">
+          <article class="panel"><div class="panel-head"><h2>攻击趋势</h2><span>近 24 小时 · 按小时</span></div><div id="trend" class="trend"></div></article>
+          <article class="panel"><div class="panel-head"><h2>威胁分布</h2><span>TOP 10</span></div><div id="categoryList" class="category-list"></div></article>
+          <article class="panel"><div class="panel-head"><h2>安全基础设施</h2><span>实时心跳</span></div><div id="serviceCards" class="service-cards"></div></article>
+        </div>
+        <div class="intelligence-grid">
+          <article class="panel geo-panel"><div class="panel-head"><h2>地理攻击感知</h2><span>24H 来源地域关联</span></div><div id="geoMap" class="geo-map"></div></article>
+          <article class="panel"><div class="panel-head"><h2>资产在线监控</h2><span id="hostSummary">0 在线</span></div><div id="hostMonitor" class="monitor-list"></div></article>
+          <article class="panel"><div class="panel-head"><h2>VPN 登录在线</h2><span id="vpnSummary">0 会话</span></div><div id="vpnMonitor" class="monitor-list"></div></article>
+        </div>
+      </section>
+      <section id="events" class="view"><div class="soc-note">事件中心是证据数据层，保留过滤、解析和标准化后的单条安全事件；告警管理是从事件中检测出的可处置告警；研判中心只收纳需要人工确认的聚合案例。目的 IP 优先来自原始日志，源地区缺失时再由源 IP 归属地补全。</div><article class="panel"><div class="panel-head"><h2>标准化安全事件</h2><span>最新 100 条</span></div><div class="table-wrap"><table><thead><tr><th>时间</th><th>来源 IP</th><th>源地区</th><th>目的 IP</th><th>数据源</th><th>威胁类型</th><th>等级</th><th>设备</th></tr></thead><tbody id="eventRows"></tbody></table></div></article></section>
+      <section id="reviews" class="view"><div class="soc-note">研判中心只收纳策略引擎升级为“需人工确认”的聚合案例，用于认领、批准、拒绝及后续联动；它不是全量告警列表。</div><div class="review-toolbar"><div><button class="secondary" data-batch-review="claim">批量认领</button><button data-batch-review="approve">批量批准</button><button class="danger" data-batch-review="reject">批量拒绝</button></div><span>已选择 <b id="reviewSelectedCount">0</b> 项</span></div><article class="panel"><div class="panel-head"><h2>人工研判队列</h2><span>所有操作写入审计</span></div><div class="table-wrap"><table><thead><tr><th class="select-cell"><input id="reviewSelectAll" type="checkbox" aria-label="全选研判事件"></th><th>来源 IP</th><th>源地区</th><th>目的 IP</th><th>类型</th><th>命中</th><th>原因</th><th>状态</th><th>操作</th></tr></thead><tbody id="reviewRows"></tbody></table></div></article></section>
+      <section id="lists" class="view"><div class="list-toolbar"><div class="list-tabs"><button class="list-tab active" data-list-tab="black">黑名单</button><button class="list-tab secondary" data-list-tab="white">白名单</button></div><div><button id="addBlacklist">新增黑名单</button><button id="addWhitelist" class="secondary">新增白名单</button></div></div><div id="blackPanel" class="list-panel"><article class="panel"><div class="panel-head"><h2>黑名单联动处置</h2><span>所有操作写入审计日志</span></div><div class="table-wrap"><table><thead><tr><th>IP</th><th>来源</th><th>类型</th><th>期望</th><th>实际</th><th>到期时间</th><th>操作</th></tr></thead><tbody id="blacklistRows"></tbody></table></div></article></div><div id="whitePanel" class="list-panel hidden"><article class="panel"><div class="panel-head"><h2>白名单网络</h2><span>支持单 IP 与 CIDR 网段</span></div><div class="table-wrap"><table><thead><tr><th>IP / 网段</th><th>原因</th><th>状态</th><th>到期时间</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="whitelistRows"></tbody></table></div></article></div></section>
+      <section id="operations" class="view"><div class="two-column"><article class="panel"><div class="panel-head"><h2>服务与采集节点</h2><span>Worker 心跳</span></div><div class="table-wrap"><table><thead><tr><th>服务</th><th>状态</th><th>实例</th><th>最后心跳</th></tr></thead><tbody id="serviceRows"></tbody></table></div></article><article class="panel"><div class="panel-head"><h2>异常任务</h2><span>人工确认后重试</span></div><div class="table-wrap"><table><thead><tr><th>类型</th><th>错误</th><th>尝试</th><th>操作</th></tr></thead><tbody id="deadRows"></tbody></table></div></article></div></section>
+    </main>
+  </div>
+  <dialog id="authDialog"><form method="dialog"><h2>设置访问令牌</h2><p>令牌仅保存在当前浏览器标签页，关闭后自动清除。</p><label for="tokenInput">API Token</label><input id="tokenInput" type="password" autocomplete="off"><div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button id="saveToken" value="default">保存</button></div></form></dialog>
+  <dialog id="blackDialog"><form id="blackForm"><h2>新增黑名单</h2><label for="blackIp">来源 IP</label><input id="blackIp" required placeholder="例如 203.0.113.8"><label for="blackMinutes">封禁时长（分钟）</label><input id="blackMinutes" type="number" min="1" max="525600" value="1440" required><label for="blackReason">处置原因</label><input id="blackReason" required maxlength="300" placeholder="必须填写，操作将进入审计日志"><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="blackDialog">取消</button><button type="submit">确认封禁</button></div></form></dialog>
+  <dialog id="whiteDialog"><form id="whiteForm"><h2>新增白名单</h2><label for="whiteNetwork">IP 或 CIDR 网段</label><input id="whiteNetwork" required placeholder="例如 10.0.0.0/8"><label for="whiteExpires">到期时间（可选）</label><input id="whiteExpires" type="datetime-local"><label for="whiteReason">加入原因</label><input id="whiteReason" required maxlength="300" placeholder="例如：内部网络、机房固定出口"><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="whiteDialog">取消</button><button type="submit">加入白名单</button></div></form></dialog>
+  <script src="/dashboard.js?v=20260913-ops1" defer></script>
+  <script src="/dashboard-batch.js" defer></script>
+  <script src="/automation.js" defer></script>
+  <script src="/soc-features.js?v=20260913-ops4" defer></script>
+</body></html>
