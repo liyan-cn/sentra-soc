@@ -55,9 +55,12 @@ class FakeAiSettings(FakeSettings):
 
 
 def test_windows_server_uses_waitress(monkeypatch):
+    import sys
+    from types import SimpleNamespace
     calls = []
     monkeypatch.setattr("monitor.api.app.platform.system", lambda: "Windows")
-    monkeypatch.setattr("waitress.serve", lambda app, **options: calls.append((app, options)))
+    monkeypatch.setitem(sys.modules,"waitress",SimpleNamespace(
+        serve=lambda app, **options: calls.append((app, options))))
     monkeypatch.setenv("MONITOR_API_THREADS", "12")
     application = object()
 
@@ -447,18 +450,18 @@ def test_asset_can_enable_tcp_monitor_after_connectivity_validation(tmp_path, mo
     client = create_app(FakeSettings(), db).test_client()
     headers = {"Authorization": "Bearer test-secret"}
     response = client.post("/api/v1/assets", headers=headers, json={
-        "name": "会天 VPN 出口", "ip": "111.124.35.42", "asset_type": "site", "site": "会天机房",
+        "name": "示例A VPN 出口", "ip": "192.0.2.42", "asset_type": "site", "site": "示例A机房",
         "tags": ["公网出口", "VPN"], "monitor_enabled": True,
         "probe": {"methods": ["tcp"], "ports": [443], "success_policy": "any"},
     })
     assert response.status_code == 200
     with db.connect() as conn:
         asset = conn.execute("SELECT source,attributes_json FROM soc_assets WHERE ip=?",
-                             ("111.124.35.42",)).fetchone()
-        host = conn.execute("SELECT kind,site FROM hosts WHERE ip=?", ("111.124.35.42",)).fetchone()
+                             ("192.0.2.42",)).fetchone()
+        host = conn.execute("SELECT kind,site FROM hosts WHERE ip=?", ("192.0.2.42",)).fetchone()
     assert asset["source"] == "host-monitor"
     assert "公网出口" in asset["attributes_json"]
-    assert tuple(host) == ("site", "会天机房")
+    assert tuple(host) == ("site", "示例A机房")
 
 
 def test_existing_asset_persists_tcp_probe_and_updates_online_status(tmp_path, monkeypatch):
@@ -470,18 +473,18 @@ def test_existing_asset_persists_tcp_probe_and_updates_online_status(tmp_path, m
         conn.execute(
             """INSERT INTO soc_assets(id,workspace_id,name,asset_type,ip,site,criticality,status,source,
                attributes_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
-            ("benxi", "default", "本溪本桓机房公网", "site", "221.203.107.254", "本溪本桓机房",
+            ("example-site-b", "default", "示例B机房公网", "site", "198.51.100.254", "示例B机房",
              "critical", "offline", "host-monitor", "{}", timestamp, timestamp),
         )
         conn.execute(
             """INSERT INTO hosts(ip,name,kind,site,status,consecutive_failures,last_checked_at,last_changed_at)
                VALUES(?,?,?,?, 'offline',4,?,?)""",
-            ("221.203.107.254", "本溪本桓机房公网", "site", "本溪本桓机房", timestamp, timestamp),
+            ("198.51.100.254", "示例B机房公网", "site", "示例B机房", timestamp, timestamp),
         )
     client = create_app(FakeSettings(), db).test_client()
     headers = {"Authorization": "Bearer test-secret", "X-Workspace-ID": "default"}
-    response = client.put("/api/v1/assets/benxi", headers=headers, json={
-        "name": "本溪本桓机房公网", "asset_type": "site", "site": "本溪本桓机房",
+    response = client.put("/api/v1/assets/example-site-b", headers=headers, json={
+        "name": "示例B机房公网", "asset_type": "site", "site": "示例B机房",
         "criticality": "critical", "monitor_enabled": True,
         "probe": {"methods": ["tcp"], "ports": [64443], "success_policy": "any"},
         "reason": "切换为 TCP 探测",
@@ -489,8 +492,8 @@ def test_existing_asset_persists_tcp_probe_and_updates_online_status(tmp_path, m
     assert response.status_code == 200
     assert response.get_json()["data"]["probe"]["online"] is True
     with db.connect() as conn:
-        asset = conn.execute("SELECT status,source,attributes_json FROM soc_assets WHERE id='benxi'").fetchone()
-        host = conn.execute("SELECT status,consecutive_failures FROM hosts WHERE ip='221.203.107.254'").fetchone()
+        asset = conn.execute("SELECT status,source,attributes_json FROM soc_assets WHERE id='example-site-b'").fetchone()
+        host = conn.execute("SELECT status,consecutive_failures FROM hosts WHERE ip='198.51.100.254'").fetchone()
     attributes = __import__("json").loads(asset["attributes_json"])
     assert tuple(asset[:2]) == ("online", "host-monitor")
     assert attributes["monitor_enabled"] is True

@@ -63,7 +63,7 @@ def test_database_tcp_monitor_overrides_legacy_yaml_target(tmp_path):
 
     class Settings:
         config_path = tmp_path / "config" / "server.yaml"
-        raw = {"hosts": [{"ip": "221.203.107.254", "name": "legacy", "probe": {"methods": ["icmp"]}}]}
+        raw = {"hosts": [{"ip": "198.51.100.254", "name": "legacy", "probe": {"methods": ["icmp"]}}]}
 
     db = Database(tmp_path / "hosts.db"); db.initialize()
     timestamp = utc_now().isoformat()
@@ -71,12 +71,12 @@ def test_database_tcp_monitor_overrides_legacy_yaml_target(tmp_path):
         conn.execute(
             """INSERT INTO soc_assets(id,workspace_id,name,asset_type,ip,site,criticality,status,source,
                attributes_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
-            ("benxi", "default", "本溪本桓机房公网", "site", "221.203.107.254", "本溪本桓机房",
+            ("example-site-b", "default", "示例B机房公网", "site", "198.51.100.254", "示例B机房",
              "critical", "online", "host-monitor",
              '{"monitor_enabled":true,"probe":{"methods":["tcp"],"ports":[64443],"success_policy":"any"}}',
              timestamp, timestamp),
         )
     target = next(item for item in host_worker.load_targets(Settings(), db)
-                  if item["ip"] == "221.203.107.254")
+                  if item["ip"] == "198.51.100.254")
     assert target["probe"]["methods"] == ["tcp"]
     assert target["probe"]["ports"] == [64443]

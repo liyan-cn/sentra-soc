@@ -20,8 +20,9 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install --upgrade pip pip-audit cyclonedx-bom
-      - run: python -m pip install .
-      - run: pip-audit --strict
+      - run: python -m pip install -e ".[backup-verify]"
+      # The local application is not a PyPI dependency; all third-party packages remain audited.
+      - run: python tools/audit_dependencies.py
       - run: cyclonedx-py environment --output-format JSON --output-file monitor3-sbom.cdx.json
       - uses: actions/upload-artifact@v4
         with:
