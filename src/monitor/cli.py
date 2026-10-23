@@ -308,7 +308,7 @@ def main():
         print_report(restore_backup(db, args.input))
         return
     if args.command == "token":
-        if args.token_command == "create":
+        if args.token_command == "create":  # CLI subcommand name, not a credential.  # nosec B105
             raw_token = "m3_" + secrets.token_urlsafe(32)
             now = utc_now()
             expires = now + timedelta(days=args.expires_days) if args.expires_days else None
@@ -321,7 +321,7 @@ def main():
             print(f"token created for {args.name} ({args.role}); copy it now, it will not be shown again:")
             print(raw_token)
             return
-        if args.token_command == "revoke":
+        if args.token_command == "revoke":  # CLI subcommand name, not a credential.  # nosec B105
             with db.transaction() as conn:
                 changed = conn.execute("UPDATE api_tokens SET enabled=0 WHERE name=?", (args.name,)).rowcount
             if not changed:

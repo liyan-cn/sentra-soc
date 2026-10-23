@@ -36,7 +36,7 @@ def sync_once(db, firewall: HuaweiFirewallClient) -> dict:
             if seen:
                 placeholders = ",".join("?" for _ in seen)
                 conn.execute(
-                    f"DELETE FROM firewall_list_entries WHERE list_type=? AND id NOT IN ({placeholders})",
+                    f"DELETE FROM firewall_list_entries WHERE list_type=? AND id NOT IN ({placeholders})",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                     (list_type, *seen),
                 )
             else:

@@ -48,3 +48,16 @@ def test_release_check_requires_fresh_backup_and_worker(tmp_path):
     create_backup(db)
     passed = run_release_checks(ProductionSettings(), db, [], require_backup=True)
     assert all(check["ok"] for check in passed)
+
+
+def test_release_integrity_check_is_bounded_and_timeout_is_not_success(tmp_path,monkeypatch):
+    import monitor.release_check as module
+    db=Database(tmp_path/'release.db');db.initialize()
+    def timeout(path,full,timeout_seconds):
+        assert path==db.path and full is True and timeout_seconds==60
+        raise TimeoutError('validation deadline reached')
+    monkeypatch.setattr(module,'_check_database',timeout)
+    results={check['name']:check for check in run_release_checks(Settings(),db,[])}
+    assert results['database-integrity']['ok'] is False
+    assert 'deadline' in results['database-integrity']['error']
+    assert results['disk-space']['ok'] is True

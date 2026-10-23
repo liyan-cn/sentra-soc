@@ -99,7 +99,7 @@ def fingerprint(lines: list[str], device_id: str = "discovery") -> Fingerprint:
                 # contributes to parser quality, but never becomes an attack.
                 parsed.append(None)
                 completeness.append(0.75)
-            except Exception:
+            except Exception:  # Intentional fail-open parsing/enrichment or best-effort failure-state persistence.  # nosec B110
                 pass
         success = len(parsed) / len(candidates)
         signature = sum(score for _line, score in candidates) / len(candidates)

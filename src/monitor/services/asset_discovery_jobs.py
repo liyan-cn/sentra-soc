@@ -68,9 +68,11 @@ class DiscoveryJobs:
         return self.get(job_id,ws)
 
     def update(self,job_id,**values):
+        if not set(values).issubset({'status','progress','total','result_json','error','updated_at'}):
+            raise ValueError('unsupported discovery job field')
         values['updated_at']=utc_now().isoformat()
         with self.db.transaction(immediate=True) as conn:
-            conn.execute('UPDATE asset_discovery_jobs SET '+','.join(k+'=?' for k in values)+' WHERE id=?',(*values.values(),job_id))
+            conn.execute('UPDATE asset_discovery_jobs SET '+','.join(k+'=?' for k in values)+' WHERE id=?',(*values.values(),job_id))  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
 
     def run(self,job_id,save_only=False):
         complete=False
@@ -100,4 +102,4 @@ class DiscoveryJobs:
                     (json.dumps(saved),utc_now().isoformat(),job_id))
         except Exception as exc:
             try:self.update(job_id,status='save_failed' if complete else 'failed',error=str(exc)[:300])
-            except Exception:pass  # stale tasks become interrupted, never reported as successful
+            except Exception:pass  # stale tasks become interrupted, never reported as successful  # Intentional fail-open parsing/enrichment or best-effort failure-state persistence.  # nosec B110

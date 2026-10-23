@@ -39,6 +39,18 @@ def context(tmp_path):
     return db, create_app(Settings(), db).test_client()
 
 
+def test_backup_status_exposes_phase_and_heartbeat(context):
+    import json
+    db,client=context
+    record={'status':'running','checked_at':utc_now().isoformat(),
+            'started_at':'2000-01-01T00:00:00+00:00','phase':'snapshot',
+            'phase_label':'复制数据库快照','progress_percent':42.5,'backup_verified':False}
+    with db.transaction() as conn:
+        conn.execute("INSERT INTO runtime_settings(name,value_json,updated_at) VALUES('backup_run',?,'now')",(json.dumps(record),))
+    response=client.get('/api/v1/data/backup-status',headers={'Authorization':'Bearer test-admin'})
+    assert response.json['data']['backup_run']==record
+
+
 def test_retention_admin_validation_confirmation_persistence_and_audit(context):
     db, client = context
     url = '/api/v1/data/retention'

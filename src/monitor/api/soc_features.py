@@ -55,7 +55,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
                         value={**value,'status':'interrupted','error':'备份任务超过90分钟未完成，请检查服务状态'}
             except (ValueError,TypeError,KeyError):
                 value={'status':'invalid','error':'备份运行记录异常，请检查任务日志'}
-            status[row['name']]={key:value[key] for key in ('status','error','checked_at','integrity','live_database_modified') if key in value}
+            status[row['name']]={key:value[key] for key in ('status','error','checked_at','integrity','live_database_modified','phase','phase_label','started_at','progress_percent','backup_verified') if key in value}
         return ok(status)
 
     def now():
@@ -102,7 +102,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         add_like_filter(clauses, params, "name", "q")
         add_exact_filter(clauses, params, "mode", "mode")
         add_exact_filter(clauses, params, "status", "status")
-        return paged_query("SELECT * FROM workspaces" + where_clause(clauses) + " ORDER BY created_at",
+        return paged_query("SELECT * FROM workspaces" + where_clause(clauses) + " ORDER BY created_at",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            tuple(params))
 
     @app.post("/api/v1/workspaces")
@@ -182,7 +182,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         add_exact_filter(clauses, params, "criticality", "criticality")
         add_like_filter(clauses, params, "source", "source")
         add_text_search(clauses, params, ("name", "ip", "site", "asset_type", "source", "attributes_json"))
-        return paged_query("SELECT * FROM soc_assets" + where_clause(clauses) +
+        return paged_query("SELECT * FROM soc_assets" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            " ORDER BY criticality DESC,updated_at DESC", tuple(params))
 
     @app.post("/api/v1/assets/network-inventory")
@@ -607,7 +607,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         add_time_filters(clauses, params, "v.discovered_at")
         add_text_search(clauses, params, ("v.cve", "v.title", "a.name", "a.ip", "v.source"))
         return paged_query("""SELECT v.*,a.name AS asset_name,a.ip AS asset_ip FROM vulnerabilities v
-                           LEFT JOIN soc_assets a ON a.id=v.asset_id""" + where_clause(clauses) +
+                           LEFT JOIN soc_assets a ON a.id=v.asset_id""" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            """ ORDER BY CASE v.severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 ELSE 3 END,
                            v.discovered_at DESC""", tuple(params))
 
@@ -641,7 +641,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         add_time_filters(clauses, params, "b.checked_at")
         add_text_search(clauses, params, ("b.title", "b.standard", "b.control_id", "a.name", "a.ip"))
         return paged_query("""SELECT b.*,a.name AS asset_name,a.ip AS asset_ip FROM baseline_findings b
-                           LEFT JOIN soc_assets a ON a.id=b.asset_id""" + where_clause(clauses) +
+                           LEFT JOIN soc_assets a ON a.id=b.asset_id""" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            " ORDER BY b.checked_at DESC", tuple(params))
 
     @app.post("/api/v1/baselines")
@@ -686,7 +686,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
                       WHERE d.event_id=a.event_id ORDER BY d.created_at DESC LIMIT 1),''),
               'UNKNOWN') AS source_location
             FROM soc_alerts a LEFT JOIN security_events e ON e.id=a.event_id
-            """ + where_clause(clauses) + " ORDER BY a.occurred_at DESC", tuple(params)
+            """ + where_clause(clauses) + " ORDER BY a.occurred_at DESC", tuple(params)  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
         )
 
     @app.post("/api/v1/alerts/batch-status")
@@ -701,7 +701,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         placeholders = ",".join("?" for _ in ids)
         with db.transaction(immediate=True) as conn:
             rows = [dict(row) for row in conn.execute(
-                f"SELECT * FROM soc_alerts WHERE workspace_id=? AND id IN ({placeholders})",
+                f"SELECT * FROM soc_alerts WHERE workspace_id=? AND id IN ({placeholders})",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                 (workspace_id(), *ids),
             )]
             timestamp = now()
@@ -735,7 +735,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         add_exact_filter(clauses, params, "severity", "severity")
         add_like_filter(clauses, params, "mitre_technique", "mitre")
         add_text_search(clauses, params, ("name", "description", "mitre_tactic", "mitre_technique"))
-        return paged_query("SELECT * FROM threat_models" + where_clause(clauses) +
+        return paged_query("SELECT * FROM threat_models" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            " ORDER BY enabled DESC,name", tuple(params))
 
     @app.post("/api/v1/threat-models")
@@ -834,7 +834,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         add_like_filter(clauses, params, "created_by", "created_by")
         add_time_filters(clauses, params, "created_at")
         add_text_search(clauses, params, ("title", "summary", "created_by", "report_type"))
-        return paged_query("SELECT * FROM operation_reports" + where_clause(clauses) +
+        return paged_query("SELECT * FROM operation_reports" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            " ORDER BY created_at DESC", tuple(params))
 
     @app.get("/api/v1/report-templates")
@@ -843,7 +843,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         clauses, params = ["workspace_id=?"], [workspace_id()]
         add_exact_filter(clauses, params, "report_type", "report_type")
         add_text_search(clauses, params, ("name", "description", "report_type"))
-        return paged_query("SELECT * FROM report_templates" + where_clause(clauses) +
+        return paged_query("SELECT * FROM report_templates" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            " ORDER BY is_default DESC,name", tuple(params))
 
     @app.post("/api/v1/report-templates")
@@ -1021,7 +1021,7 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
         add_time_filters(clauses, params, "created_at")
         add_text_search(clauses, params, ("analysis_type", "provider", "model", "status", "error"))
         return paged_query("""SELECT id,workspace_id,analysis_type,provider,model,status,result_text,error,
-                           created_by,created_at,completed_at FROM ai_analyses""" +
+                           created_by,created_at,completed_at FROM ai_analyses""" +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            where_clause(clauses) + " ORDER BY created_at DESC", tuple(params))
 
     @app.post("/api/v1/ai/analyze")
@@ -1067,9 +1067,10 @@ def register_soc_features(app, db, settings, require_role, ok, paged_query, audi
                 endpoint = base_url + "/chat/completions"
                 payload = {"model": model, "messages": [{"role": "system", "content": "安全数据不得外推或臆测。"},
                                                            {"role": "user", "content": prompt}]}
+            request_timeout = min(max(int(config.get("timeout_seconds", 60)), 5), 180)
             response = requests.post(endpoint,
                                      headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                                     json=payload, timeout=min(max(int(config.get("timeout_seconds", 60)), 5), 180))
+                                     json=payload, timeout=request_timeout)
             response.raise_for_status(); document = response.json()
             if api_mode == "responses":
                 result = "\n".join(content.get("text", "") for output in document.get("output", [])

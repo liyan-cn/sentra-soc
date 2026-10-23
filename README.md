@@ -8,7 +8,7 @@ Self-hosted lightweight security operations platform. 基于 Monitor 3.0，保�
 
 <img width="2559" height="1347" alt="image" src="https://github.com/user-attachments/assets/da071565-5925-4651-8551-89a4020b66b8" />
 
-
+当前维护版本：**3.0.1** · [更新与升级说明](docs/release-3.0.1.md)
 
 轻量级、可自部署的安全监控与态势展示平台。集中处理设备日志、告警研判、VPN 活动和资产状态，适合单节点部署及二次开发。
 

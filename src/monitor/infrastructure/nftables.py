@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipaddress
 import re
 import shutil
-import subprocess
+import subprocess  # Used only with argument arrays and bounded execution; no shell.  # nosec B404
 from typing import Callable
 
 from monitor.common.errors import ExternalServiceError

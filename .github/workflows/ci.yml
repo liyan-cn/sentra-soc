@@ -14,7 +14,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install -e ".[dev,backup-verify]"
       - run: python -m compileall -q src tests
       - run: python -m pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node tests/dashboard_requests_check.cjs
+      - run: node tests/wall_chart_check.cjs
+      - run: node tests/vpn_display_check.cjs
 

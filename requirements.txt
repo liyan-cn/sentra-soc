@@ -1,6 +1,9 @@
 Flask>=3.0,<4
 PyYAML>=6.0,<7
-requests>=2.31,<3
-paramiko>=3.4,<4
+requests>=2.34.2,<3
+urllib3>=2.8,<3
+certifi>=2026.10.19
+Werkzeug>=3.1.9,<4
+paramiko>=5.1,<6
 psutil>=5.9,<7
-cryptography>=42,<50
+cryptography>=50.0.2,<51

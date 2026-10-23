@@ -6,7 +6,7 @@ from importlib import resources
 
 from monitor.common.rules import RuleLoader
 from monitor.common.health import service_max_age
-from monitor.infrastructure.backups import verify_backup
+from monitor.infrastructure.backups import verify_backup, _check_database
 from monitor.workers.runtime import HEALTHY_STATUSES
 
 
@@ -22,15 +22,15 @@ def run_release_checks(settings, db, validation_errors: list[str], require_backu
         checks.append({"name": "policy-rules", "ok": False, "error": str(exc)})
 
     try:
-        with db.connect() as conn:
-            integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
-            foreign_keys = conn.execute("PRAGMA foreign_key_check").fetchall()
-            journal = conn.execute("PRAGMA journal_mode").fetchone()[0]
-            versions = [row[0] for row in conn.execute(
-                "SELECT version FROM schema_migrations ORDER BY version")]
+        # Release acceptance must not leave an unbounded full-table check in
+        # the live process. A timeout is a failed check, never a passing shortcut.
+        report=_check_database(db.path,full=True,timeout_seconds=60)
+        integrity='ok'
+        foreign_keys=report['foreign_key_errors']
+        journal=report['journal_mode'];versions=report['versions']
         checks.append({"name": "database-integrity",
                        "ok": integrity == "ok" and not foreign_keys and str(journal).lower() == "wal",
-                       "integrity": integrity, "foreign_key_errors": len(foreign_keys),
+                       "integrity": integrity, "foreign_key_errors": foreign_keys,
                        "journal_mode": journal, "schema_versions": versions})
     except Exception as exc:
         checks.append({"name": "database-integrity", "ok": False, "error": str(exc)})
@@ -41,7 +41,10 @@ def run_release_checks(settings, db, validation_errors: list[str], require_backu
     checks.append({"name": "disk-space", "ok": free_mb >= minimum_mb,
                    "free_mb": free_mb, "minimum_mb": minimum_mb})
 
-    required_assets = ("base.yaml", "rules.yaml", "dashboard.html", "dashboard.css", "dashboard.js")
+    required_assets = ("base.yaml", "rules.yaml", "dashboard.html", "dashboard.css", "dashboard.js",
+                       'soc-features.js','soc-features.css','dashboard-batch.js','dashboard-batch.css',
+                       'automation.js','automation.css','display.html','display-wall.js','display.css',
+                       'display-fix.css')
     package = resources.files("monitor.resources")
     missing = [name for name in required_assets if not package.joinpath(name).is_file()]
     checks.append({"name": "packaged-assets", "ok": not missing, "missing": missing})
@@ -52,7 +55,7 @@ def run_release_checks(settings, db, validation_errors: list[str], require_backu
     if required_services:
         with db.connect() as conn:
             rows = {row["service"]: row for row in conn.execute(
-                "SELECT service,status,updated_at FROM service_heartbeats WHERE service IN (%s)"
+                "SELECT service,status,updated_at FROM service_heartbeats WHERE service IN (%s)"  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                 % ",".join("?" for _ in required_services), required_services)}
         now = datetime.now(timezone.utc)
         for service in required_services:

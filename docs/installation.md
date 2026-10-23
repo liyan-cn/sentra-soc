@@ -99,7 +99,21 @@ monitor3 backup rehearse --input /absolute/path/to/backup.db
 
 `/health/live` 是进程存活检查，`/health/ready` 的必需后台服务需在配置里声明。
 备份需检查成功清单和隔离恢复演练，不能以“定时器已启用”代替成功。
-大数据库的随机读性能会显著影响校验；当前检查有 10 分钟超时，超时意味着未验证。
+大数据库的随机读性能会显著影响校验。默认校验上限按文件大小计算，为 600–7200 秒；
+可用 `MONITOR_BACKUP_VERIFY_TIMEOUT_SECONDS` 显式设置 60–21600 秒，
+`MONITOR_BACKUP_VERIFY_CACHE_MB` 设置校验子进程缓存（16–512 MiB，默认 128 MiB）。
+超时意味着未验证，不能以延长超时或关闭失败通知代替备份验收。
+
+机械盘大库可选用独立只读压缩镜像校验器：安装 `.[backup-verify]`，
+为备份服务设置 `MONITOR_BACKUP_VERIFY_BACKEND=compressed`。
+如果依赖装在独立 target 目录，再设置 `MONITOR_BACKUP_VERIFIER_DEPS` 为该目录的绝对路径。
+该方式先顺序读取快照，生成逐块带 SHA-256 的临时压缩镜像，再运行相同的 SQLite 校验；
+业务进程仍使用标准 SQLite，原始备份仍保存为普通 `.db` 文件。
+需要额外临时磁盘空间，校验仍保留硬超时；发布前应在实际大库上完成试验与隔离恢复演练。
+
+定时备份的失败通知可通过服务环境变量 `MONITOR_BACKUP_FAILURE_NOTIFY=0` 单独暂停；
+页面仍保留失败状态，其他安全告警不受影响。恢复通知时删除该覆盖值或设为 `1`。
+备份清理只按有效清单保留最近的已验证文件；未验证文件保留给管理员核查。
 
 升级前创建并验证备份，记录当前版本，停止所有写入进程，再安装新版本并执行
 `monitor3 migrate`，最后启动后台进程及 API。不要在生产运行状态下恢复数据库。

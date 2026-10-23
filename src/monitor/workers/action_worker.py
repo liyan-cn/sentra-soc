@@ -18,12 +18,23 @@ def claim(db, worker_id: str, lease_seconds: int, firewall_mode: str = "disabled
     now = utc_now()
     locked_until = now + timedelta(seconds=lease_seconds)
     with db.transaction(immediate=True) as conn:
+        # A worker can exit after claiming work. Requeue expired leases in bounded
+        # batches; a completed action cannot be overwritten by its former owner.
+        expired=conn.execute("""SELECT id,attempts,max_attempts FROM action_outbox
+            WHERE status='running' AND locked_until IS NOT NULL AND locked_until<? LIMIT 50""",
+            (now.isoformat(),)).fetchall()
+        for item in expired:
+            exhausted=int(item['attempts'])>=int(item['max_attempts'])
+            conn.execute("""UPDATE action_outbox SET status=?,locked_by=NULL,locked_until=NULL,
+                available_at=?,updated_at=?,last_error=? WHERE id=?""",
+                ('dead' if exhausted else 'retry',now.isoformat(),now.isoformat(),
+                 'worker lease expired; retry limit reached' if exhausted else 'worker lease expired; queued for retry',item['id']))
         firewall_filter = "" if firewall_mode != "disabled" else "AND action_type NOT IN ('BLOCK','REFRESH_BLOCK','UNBLOCK')"
         row = conn.execute(
             f"""SELECT * FROM action_outbox WHERE status IN ('pending','retry')
             AND available_at<=? AND (locked_until IS NULL OR locked_until<?)
             {firewall_filter}
-            ORDER BY priority DESC,created_at ASC LIMIT 1""", (now.isoformat(), now.isoformat())
+            ORDER BY priority DESC,created_at ASC LIMIT 1""", (now.isoformat(), now.isoformat())  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
         ).fetchone()
         if not row:
             return None
@@ -31,7 +42,7 @@ def claim(db, worker_id: str, lease_seconds: int, firewall_mode: str = "disabled
             """UPDATE action_outbox SET status='running',locked_by=?,locked_until=?,attempts=attempts+1,updated_at=?
             WHERE id=?""", (worker_id, locked_until.isoformat(), now.isoformat(), row["id"]),
         )
-        return dict(row)
+        return {**dict(row),'locked_by':worker_id,'locked_until':locked_until.isoformat()}
 
 
 def finish(db, action, success: bool, error: str = "", simulated: bool = False, notification_status: str | None = None):
@@ -40,10 +51,13 @@ def finish(db, action, success: bool, error: str = "", simulated: bool = False, 
     status = "succeeded" if success else ("dead" if attempts >= int(action["max_attempts"]) else "retry")
     available = now + timedelta(seconds=min(300, 2 ** min(attempts, 8)))
     with db.transaction(immediate=True) as conn:
-        conn.execute(
-            """UPDATE action_outbox SET status=?,available_at=?,locked_by=NULL,locked_until=NULL,last_error=?,updated_at=? WHERE id=?""",
-            (status, available.isoformat(), error[:2000] or None, now.isoformat(), action["id"]),
+        changed=conn.execute(
+            """UPDATE action_outbox SET status=?,available_at=?,locked_by=NULL,locked_until=NULL,last_error=?,updated_at=?
+            WHERE id=? AND status='running' AND locked_by=? AND locked_until=?""",
+            (status, available.isoformat(), error[:2000] or None, now.isoformat(), action["id"],
+             action['locked_by'],action['locked_until']),
         )
+        if not changed.rowcount:return False
         if action["action_type"] == "NOTIFY":
             payload = json.loads(action["payload_json"])
             dedup_key = str(payload.get("dedup_key", action["aggregate_id"]))
@@ -62,6 +76,7 @@ def finish(db, action, success: bool, error: str = "", simulated: bool = False, 
                 (actual if success else "error", desired if success else ("pending_unblock" if action["action_type"] == "UNBLOCK" else "pending_block"),
                  error[:2000] or None, 1 if success else 0, action["aggregate_id"]),
             )
+    return True
 
 
 def enqueue_notification(db, action: dict, content: str) -> None:
@@ -146,8 +161,10 @@ def run():
                     database_notifier(db, settings, registry).send(payload["content"])
             else:
                 raise ValueError(f"unsupported action: {action['action_type']}")
-            finish(db, action, True, simulated=simulated,
-                   notification_status="suppressed" if suppressed else None)
+            if not finish(db, action, True, simulated=simulated,
+                          notification_status="suppressed" if suppressed else None):
+                logger.warning('ignored completion from expired action lease',extra={'action_id':action['id']})
+                continue
             if action["action_type"] in ("BLOCK", "REFRESH_BLOCK"):
                 safe_enqueue_notification(
                     db, action,

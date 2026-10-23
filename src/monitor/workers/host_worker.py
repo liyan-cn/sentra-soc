@@ -4,7 +4,7 @@ import concurrent.futures
 import re
 import platform
 import socket
-import subprocess
+import subprocess  # Used only with argument arrays and bounded execution; no shell.  # nosec B404
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -24,7 +24,7 @@ def ping(ip: str, count: int = 4, timeout_seconds: int = 2,
                ["ping", "-c", str(count), "-W", str(timeout_seconds), "-q", ip])
     try:
         result = subprocess.run(command, capture_output=True,
-                                timeout=max(8, count * timeout_seconds + 4), text=True)
+                                timeout=max(8, count * timeout_seconds + 4), text=True)  # Fixed executable and argument array, no shell; execution is bounded.  # nosec B603
         detail = (result.stdout + result.stderr)[-1000:]
         loss_match = re.search(r"([\d.]+)%\s*(?:packet )?loss", detail, re.I)
         if not loss_match:

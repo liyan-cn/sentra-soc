@@ -4,6 +4,11 @@
 .venv/
 .tmp/
 .test-tmp/
+backup-lab-test-*/
+backup-mute-test-*/
+review-test-*/
+verifier-test-*/
+mirror-smoke-*/
 data/
 logs/
 deploy-cache/

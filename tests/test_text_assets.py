@@ -11,7 +11,8 @@ def test_user_facing_text_assets_are_valid_utf8_without_mojibake():
     failures = []
     for path in ROOT.rglob("*"):
         if (not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES
-                or any(part in {".venv", "build"} for part in path.parts)):
+                or any(part in {".venv", "build", "dist", ".git", ".pytest_cache"}
+                       for part in path.relative_to(ROOT).parts)):
             continue
         text = path.read_text(encoding="utf-8")
         if "\ufffd" in text or any(0xE000 <= ord(char) <= 0xF8FF for char in text):

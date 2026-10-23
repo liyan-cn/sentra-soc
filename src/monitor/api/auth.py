@@ -24,7 +24,7 @@ def token_hash(token: str) -> str:
 
 
 class TokenAuthenticator:
-    def __init__(self, database, bootstrap_admin_token: str = "", usage_update_seconds: int = 300):
+    def __init__(self, database, bootstrap_admin_token: str = "", usage_update_seconds: int = 300):  # Empty means unconfigured; not a usable hard-coded credential.  # nosec B107
         self.db = database
         self.bootstrap_hash = token_hash(bootstrap_admin_token) if bootstrap_admin_token else ""
         self.usage_update_seconds = max(0, int(usage_update_seconds))

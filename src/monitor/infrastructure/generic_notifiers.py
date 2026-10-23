@@ -30,7 +30,7 @@ class FanoutNotifier:
 
 
 class WebhookNotifier:
-    def __init__(self, config: dict, secret: str = ""):
+    def __init__(self, config: dict, secret: str = ""):  # Empty means unconfigured; not a usable hard-coded credential.  # nosec B107
         self.enabled = bool(config.get("enabled", False))
         self.url = str(config.get("url", ""))
         self.secret = secret
@@ -57,7 +57,7 @@ class WebhookNotifier:
 
 
 class SMTPNotifier:
-    def __init__(self, config: dict, password: str = ""):
+    def __init__(self, config: dict, password: str = ""):  # Empty means unconfigured; not a usable hard-coded credential.  # nosec B107
         self.enabled = bool(config.get("enabled", False))
         self.config = config
         self.password = password
@@ -98,7 +98,7 @@ class SMSWebhookNotifier:
     JSON envelope that can be accepted directly or translated by an internal
     webhook gateway.
     """
-    def __init__(self, config: dict, token: str = ""):
+    def __init__(self, config: dict, token: str = ""):  # Empty means unconfigured; not a usable hard-coded credential.  # nosec B107
         self.enabled = bool(config.get("enabled", False))
         self.url = str(config.get("url", ""))
         self.recipients = config.get("recipients", [])

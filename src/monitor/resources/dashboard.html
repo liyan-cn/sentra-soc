@@ -64,8 +64,8 @@
   <dialog id="authDialog"><form method="dialog"><h2>设置访问令牌</h2><p>令牌仅保存在当前浏览器标签页，关闭后自动清除。</p><label for="tokenInput">API Token</label><input id="tokenInput" type="password" autocomplete="off"><div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button id="saveToken" value="default">保存</button></div></form></dialog>
   <dialog id="blackDialog"><form id="blackForm"><h2>新增黑名单</h2><label for="blackIp">来源 IP</label><input id="blackIp" required placeholder="例如 203.0.113.8"><label for="blackMinutes">封禁时长（分钟）</label><input id="blackMinutes" type="number" min="1" max="525600" value="1440" required><label for="blackReason">处置原因</label><input id="blackReason" required maxlength="300" placeholder="必须填写，操作将进入审计日志"><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="blackDialog">取消</button><button type="submit">确认封禁</button></div></form></dialog>
   <dialog id="whiteDialog"><form id="whiteForm"><h2>新增白名单</h2><label for="whiteNetwork">IP 或 CIDR 网段</label><input id="whiteNetwork" required placeholder="例如 10.0.0.0/8"><label for="whiteExpires">到期时间（可选）</label><input id="whiteExpires" type="datetime-local"><label for="whiteReason">加入原因</label><input id="whiteReason" required maxlength="300" placeholder="例如：内部网络、机房固定出口"><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="whiteDialog">取消</button><button type="submit">加入白名单</button></div></form></dialog>
-  <script src="/dashboard.js?v=20260913-ops1" defer></script>
+  <script src="/dashboard.js?v=20261022-review1" defer></script>
   <script src="/dashboard-batch.js" defer></script>
   <script src="/automation.js" defer></script>
-  <script src="/soc-features.js?v=20260913-ops4" defer></script>
+  <script src="/soc-features.js?v=20260916-backup1" defer></script>
 </body></html>

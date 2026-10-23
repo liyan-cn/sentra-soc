@@ -73,7 +73,9 @@ def test_prune_removes_only_old_automatic_backups_and_manifests(tmp_path):
     for index in range(4):
         backup = tmp_path / f"monitor3-2026010{index}T000000Z.db"
         backup.write_bytes(str(index).encode())
-        backup.with_suffix(".db.json").write_text("{}", encoding="utf-8")
+        backup.with_suffix(".db.json").write_text(json.dumps({
+            'created_at':f'2026-01-0{index+1}T00:00:00+00:00',
+            'size':backup.stat().st_size,'integrity':'ok','sha256':'a'*64}),encoding='utf-8')
     manual = tmp_path / "manual.db"
     safety = tmp_path / "pre-restore-20260101T000000Z.db"
     manual.write_bytes(b"manual")

@@ -24,15 +24,23 @@ async function apiPayload(path,options={}){
   const headers={...(options.headers||{})};
   if(state.token)headers.Authorization=`Bearer ${state.token}`;
   if(options.body)headers['Content-Type']='application/json';
+  const controller=new AbortController(),parentSignal=options.signal;
+  let timedOut=false;
+  const cancel=()=>controller.abort();
+  if(parentSignal?.aborted)cancel();else parentSignal?.addEventListener('abort',cancel,{once:true});
+  const timeout=setTimeout(()=>{timedOut=true;controller.abort()},15000);
   let response;
   const attempts=String(options.method||'GET').toUpperCase()==='GET'?2:1;
-  for(let attempt=0;attempt<attempts;attempt++){
-    try{response=await fetch(path,{...options,headers,cache:'no-store'});break}
-    catch(error){if(error.name==='AbortError')throw error;if(attempt+1>=attempts)throw new Error('连接服务失败，请稍后重试');await new Promise(resolve=>setTimeout(resolve,250))}
-  }
-  const payload=await response.json().catch(()=>({}));
-  if(!response.ok){const e=new Error(payload.error?.message||`${response.status} request failed`);e.status=response.status;throw e}
-  return payload;
+  try{
+    for(let attempt=0;attempt<attempts;attempt++){
+      try{response=await fetch(path,{...options,headers,signal:controller.signal,cache:'no-store'});break}
+      catch(error){if(controller.signal.aborted||error.name==='AbortError')throw error;if(attempt+1>=attempts)throw new Error('连接服务失败，请稍后重试');await new Promise(resolve=>setTimeout(resolve,250))}
+    }
+    const payload=await response.json().catch(error=>{if(controller.signal.aborted)throw error;return {}});
+    if(!response.ok){const e=new Error(payload.error?.message||`${response.status} request failed`);e.status=response.status;throw e}
+    return payload;
+  }catch(error){if(timedOut)throw new Error(attempts===1?'请求超时，请刷新确认操作结果':'请求超时，请稍后刷新');throw error}
+  finally{clearTimeout(timeout);parentSignal?.removeEventListener('abort',cancel)}
 }
 async function api(path,options={}){return (await apiPayload(path,options)).data}
 function badge(v){const value=String(v||'--');const ok=['ok','ready','running','online','blocked','succeeded'].includes(value);const bad=['dead','error','offline','degraded'].includes(value);return `<span class="badge ${ok?'ok':bad?'bad':''}">${esc(value)}</span>`}

@@ -38,6 +38,17 @@ def _is_ip(value: str) -> bool:
         return False
 
 
+def _alert_window_stats(conn, cutoff: str):
+    """Use the same exact time window for console and wall totals and charts."""
+    totals=conn.execute("""SELECT COUNT(*) AS events,
+        COUNT(DISTINCT NULLIF(src_ip,'')) AS sources FROM soc_alerts WHERE occurred_at>=?""",
+        (cutoff,)).fetchone()
+    hourly=[dict(row) for row in conn.execute("""SELECT substr(occurred_at,1,13) AS hour,
+        COUNT(*) AS events FROM soc_alerts WHERE occurred_at>=?
+        GROUP BY substr(occurred_at,1,13) ORDER BY hour""",(cutoff,))]
+    return dict(totals),hourly
+
+
 def _source_summaries(conn, settings, cutoff: str) -> list[dict]:
     """Merge configured and auto-discovered devices using hourly ingestion rollups.
 
@@ -330,7 +341,7 @@ def create_app(settings=None, db=None) -> Flask:
                 health = settings.section("health")
                 required = list(health.get("required_services", []))
                 rows = {row["service"]: row for row in conn.execute(
-                    "SELECT service,status,updated_at FROM service_heartbeats WHERE service IN (%s)"
+                    "SELECT service,status,updated_at FROM service_heartbeats WHERE service IN (%s)"  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                     % ",".join("?" for _ in required), required
                 )} if required else {}
             now = utc_now()
@@ -531,7 +542,7 @@ def create_app(settings=None, db=None) -> Flask:
               NULLIF((SELECT d.location FROM policy_decisions d
                       WHERE d.event_id=e.id ORDER BY d.created_at DESC LIMIT 1),''),
               'UNKNOWN') AS source_location
-            FROM security_events e""" + where_clause(clauses) + " ORDER BY e.occurred_at DESC",
+            FROM security_events e""" + where_clause(clauses) + " ORDER BY e.occurred_at DESC",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
             tuple(params),
         )
 
@@ -641,7 +652,7 @@ def create_app(settings=None, db=None) -> Flask:
         clauses, params = [], []
         add_like_filter(clauses, params, "service", "q")
         add_exact_filter(clauses, params, "status", "status")
-        return paged_query("SELECT * FROM service_heartbeats" + where_clause(clauses) + " ORDER BY service",
+        return paged_query("SELECT * FROM service_heartbeats" + where_clause(clauses) + " ORDER BY service",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            tuple(params))
 
     @app.get("/api/v1/actions")
@@ -654,7 +665,7 @@ def create_app(settings=None, db=None) -> Flask:
         add_text_search(clauses, params, ("action_type", "aggregate_type", "aggregate_id", "last_error"))
         add_time_filters(clauses, params, "created_at")
         order = " ORDER BY priority DESC,created_at" if query_text("status") else " ORDER BY created_at DESC"
-        return paged_query("SELECT * FROM action_outbox" + where_clause(clauses) + order, tuple(params))
+        return paged_query("SELECT * FROM action_outbox" + where_clause(clauses) + order, tuple(params))  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
 
     @app.get("/api/v1/vpn/sessions")
     @require_role("viewer")
@@ -666,7 +677,7 @@ def create_app(settings=None, db=None) -> Flask:
         add_exact_filter(clauses, params, "status", "status")
         add_time_filters(clauses, params, "login_at")
         add_text_search(clauses, params, ("username", "client_ip", "virtual_ip", "location"))
-        return paged_query("SELECT * FROM vpn_sessions" + where_clause(clauses) + " ORDER BY login_at DESC",
+        return paged_query("SELECT * FROM vpn_sessions" + where_clause(clauses) + " ORDER BY login_at DESC",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            tuple(params))
 
     @app.get("/api/v1/hosts")
@@ -679,7 +690,7 @@ def create_app(settings=None, db=None) -> Flask:
         add_exact_filter(clauses, params, "status", "status")
         add_exact_filter(clauses, params, "kind", "kind")
         add_text_search(clauses, params, ("ip", "name", "site", "kind"))
-        return paged_query("SELECT * FROM hosts" + where_clause(clauses) + " ORDER BY ip", tuple(params))
+        return paged_query("SELECT * FROM hosts" + where_clause(clauses) + " ORDER BY ip", tuple(params))  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
 
     @app.get("/api/v1/alerts/recent")
     @require_role("viewer")
@@ -710,17 +721,13 @@ def create_app(settings=None, db=None) -> Flask:
         """A single read model for the SOC command-center overview."""
         cutoff = (utc_now() - timedelta(hours=24)).isoformat()
         with db.connect() as conn:
+            conn.execute('BEGIN')
+            window_totals,hourly=_alert_window_stats(conn,cutoff)
             sources = _limit_source_summaries(_source_summaries(conn, settings, cutoff), 20)
             categories = [dict(row) for row in conn.execute(
                 """SELECT title AS category,COUNT(*) AS events
                 FROM soc_alerts WHERE occurred_at>=?
                 GROUP BY title ORDER BY events DESC LIMIT 10""", (cutoff,)
-            )]
-            hourly = [dict(row) for row in conn.execute(
-                """SELECT hour,SUM(event_count) AS events,
-                COUNT(DISTINCT CASE WHEN src_ip<>'' THEN src_ip END) AS unique_sources
-                FROM source_alert_hourly_stats WHERE hour>=substr(?,1,13)
-                GROUP BY hour ORDER BY hour""", (cutoff,)
             )]
             geography = [dict(row) for row in conn.execute(
                 """SELECT COALESCE(NULLIF((SELECT d.location FROM policy_decisions d
@@ -752,14 +759,9 @@ def create_app(settings=None, db=None) -> Flask:
                 FROM vpn_sessions WHERE status='active' AND COALESCE(last_seen_at,login_at)>=?
                 ORDER BY COALESCE(last_seen_at,login_at) DESC LIMIT 100""", (_vpn_active_cutoff(settings),)
             )]
-            rollup = conn.execute(
-                """SELECT COALESCE(SUM(event_count),0),
-                COUNT(DISTINCT CASE WHEN src_ip<>'' THEN src_ip END)
-                FROM source_alert_hourly_stats WHERE hour>=substr(?,1,13)""", (cutoff,)
-            ).fetchone()
             totals = {
-                "events_24h": int(rollup[0] or 0),
-                "unique_sources_24h": int(rollup[1] or 0),
+                "events_24h": window_totals['events'],
+                "unique_sources_24h": window_totals['sources'],
                 "open_reviews": conn.execute(
                     "SELECT COUNT(*) FROM review_cases WHERE status IN ('open','claimed')"
                 ).fetchone()[0],
@@ -812,9 +814,11 @@ def create_app(settings=None, db=None) -> Flask:
         """Sanitized aggregate read model for customer-facing wall displays."""
         cutoff = (utc_now() - timedelta(hours=24)).isoformat()
         with db.connect() as conn:
+            conn.execute('BEGIN')
+            window_totals,hourly=_alert_window_stats(conn,cutoff)
             totals = {
-                "events": conn.execute("SELECT COUNT(*) FROM soc_alerts WHERE occurred_at>=?", (cutoff,)).fetchone()[0],
-                "sources": conn.execute("SELECT COUNT(DISTINCT src_ip) FROM soc_alerts WHERE occurred_at>=?", (cutoff,)).fetchone()[0],
+                "events": window_totals['events'],
+                "sources": window_totals['sources'],
                 "blocked": conn.execute("SELECT COUNT(*) FROM blacklist_entries WHERE desired_state IN ('pending_block','blocked')").fetchone()[0],
                 "reviews": conn.execute("SELECT COUNT(*) FROM review_cases WHERE status IN ('open','claimed')").fetchone()[0],
                 "assets_online": conn.execute("SELECT COUNT(*) FROM hosts WHERE status='online' AND kind<>'site'").fetchone()[0],
@@ -829,10 +833,6 @@ def create_app(settings=None, db=None) -> Flask:
                     (_vpn_active_cutoff(settings),),
                 ).fetchone()[0],
             }
-            hourly = [dict(x) for x in conn.execute(
-                """SELECT substr(occurred_at,1,13) AS hour,COUNT(*) AS events
-                FROM soc_alerts WHERE occurred_at>=?
-                GROUP BY substr(occurred_at,1,13) ORDER BY hour""", (cutoff,))]
             sources = _limit_source_summaries(_source_summaries(conn, settings, cutoff), 8)
             categories = [dict(x) for x in conn.execute(
                 """SELECT title AS category,COUNT(*) AS events FROM soc_alerts WHERE occurred_at>=?
@@ -1008,7 +1008,7 @@ def create_app(settings=None, db=None) -> Flask:
         add_like_filter(clauses, params, "playbook_id", "playbook_id")
         add_exact_filter(clauses, params, "status", "status")
         add_text_search(clauses, params, ("playbook_id", "trigger_type", "status", "error"))
-        return paged_query("SELECT * FROM playbook_executions" + where_clause(clauses) +
+        return paged_query("SELECT * FROM playbook_executions" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            " ORDER BY created_at DESC", tuple(params))
 
     @app.get("/api/v1/discovered-devices")
@@ -1021,7 +1021,7 @@ def create_app(settings=None, db=None) -> Flask:
         add_like_filter(clauses, params, "source", "source")
         add_time_filters(clauses, params, "last_seen_at")
         add_text_search(clauses, params, ("source_ip", "name", "parser", "source", "last_error"))
-        return paged_query("SELECT * FROM discovered_devices" + where_clause(clauses) +
+        return paged_query("SELECT * FROM discovered_devices" + where_clause(clauses) +  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                            " ORDER BY last_seen_at DESC", tuple(params))
 
     @app.get("/api/v1/device-parsers")
@@ -1127,7 +1127,7 @@ def create_app(settings=None, db=None) -> Flask:
         add_text_search(clauses, params, ("id", "name", "definition_json", "created_by", "updated_by"))
         add_time_filters(clauses, params, "updated_at")
         sql = ("SELECT id,name,enabled,priority,version,created_by,updated_by,created_at,updated_at,definition_json "
-               "FROM managed_playbooks" + where_clause(clauses) + " ORDER BY priority DESC,id LIMIT ? OFFSET ?")
+               "FROM managed_playbooks" + where_clause(clauses) + " ORDER BY priority DESC,id LIMIT ? OFFSET ?")  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
         try:
             size = min(max(int(request.args.get("page_size", 50)), 1), 200)
             page = max(int(request.args.get("page", 1)), 1)

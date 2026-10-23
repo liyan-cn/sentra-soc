@@ -44,6 +44,10 @@ def _maintenance_write(db):
 
 def _delete_batch(db, table: str, column: str, cutoff: str, batch_size: int, max_batches: int = 20) -> int:
     """Delete old rows in short transactions; table names only come from the allowlist above."""
+    allowed=set(RETENTION_TARGETS.values()) | {(name,'hour') for name in (
+        'source_hourly_stats','ingestion_hourly_stats','source_alert_hourly_stats')}
+    if (table,column) not in allowed:
+        raise ValueError('unsupported retention target')
     deleted = 0
     cursor_key = 'retention_cursor:' + table
     with db.connect() as conn:
@@ -53,7 +57,7 @@ def _delete_batch(db, table: str, column: str, cutoff: str, batch_size: int, max
         condition = " AND status<>'active'" if table == 'vpn_sessions' else ''
         status_column = ',status' if table == 'vpn_sessions' else ''
         rows = _candidate_rows(db,
-            f"SELECT rowid,{column}{status_column} FROM {table} WHERE rowid>? ORDER BY rowid LIMIT 500",
+            f"SELECT rowid,{column}{status_column} FROM {table} WHERE rowid>? ORDER BY rowid LIMIT 500",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
             (cursor,))
         limit = min(batch_size, 50)
         ids = []
@@ -66,7 +70,7 @@ def _delete_batch(db, table: str, column: str, cutoff: str, batch_size: int, max
         marks = ','.join('?' for _ in ids)
         with _maintenance_write(db) as conn:
             changed = conn.execute(
-                f"DELETE FROM {table} WHERE rowid IN ({marks}) AND {column}<?{condition}",
+                f"DELETE FROM {table} WHERE rowid IN ({marks}) AND {column}<?{condition}",  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
                 (*ids, cutoff),
             ).rowcount if ids else 0
             conn.execute('''INSERT INTO runtime_settings(name,value_json,updated_at) VALUES(?,?,?)
@@ -94,9 +98,9 @@ def _delete_events(db, cutoff: str, batch_size: int, max_batches: int = 20) -> i
             return deleted
         with _maintenance_write(db) as conn:
             marks = ",".join("?" for _ in ids)
-            conn.execute(f"DELETE FROM policy_decisions WHERE event_id IN ({marks})", ids)
-            conn.execute(f"DELETE FROM soc_alerts WHERE event_id IN ({marks})", ids)
-            conn.execute(f"DELETE FROM security_events WHERE id IN ({marks})", ids)
+            conn.execute(f"DELETE FROM policy_decisions WHERE event_id IN ({marks})", ids)  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
+            conn.execute(f"DELETE FROM soc_alerts WHERE event_id IN ({marks})", ids)  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
+            conn.execute(f"DELETE FROM security_events WHERE id IN ({marks})", ids)  # SQL structure uses fixed internal identifiers/clauses; values are bound separately.  # nosec B608
         deleted += len(ids)
         time.sleep(0.02)
     return deleted

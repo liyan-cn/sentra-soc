@@ -60,7 +60,7 @@ class GeoLocationService:
             data = response.json()
             if data.get("status") == "success":
                 status, country, region, city = "ok", data.get("country", ""), data.get("regionName", ""), data.get("city", "")
-        except Exception:
+        except Exception:  # Intentional fail-open parsing/enrichment or best-effort failure-state persistence.  # nosec B110
             pass
         self._record_result(status == "ok")
         expires = (now + timedelta(days=self.ttl_days)) if status == "ok" else (

@@ -232,11 +232,11 @@ def test_dashboard_assets_are_packaged_and_csp_compatible(tmp_path):
     assert automation_css.status_code == automation_script.status_code == 200
     assert soc_css.status_code == soc_script.status_code == 200
     assert "\u5b89\u5168\u8fd0\u8425\u4e2d\u5fc3" in page.get_data(as_text=True)
-    assert '<script src="/dashboard.js?v=20260913-ops1" defer></script>' in page.get_data(as_text=True)
-    assert client.get('/dashboard.js?v=20260913-ops1').status_code == 200
+    assert '<script src="/dashboard.js?v=20261022-review1" defer></script>' in page.get_data(as_text=True)
+    assert client.get('/dashboard.js?v=20261022-review1').status_code == 200
     assert '<script src="/dashboard-batch.js" defer></script>' in page.get_data(as_text=True)
     assert '<script src="/automation.js" defer></script>' in page.get_data(as_text=True)
-    assert '<script src="/soc-features.js?v=20260913-ops4" defer></script>' in page.get_data(as_text=True)
+    assert '<script src="/soc-features.js?v=20260916-backup1" defer></script>' in page.get_data(as_text=True)
     assert "reviewSelectAll" in page.get_data(as_text=True)
     assert "data-batch-review" in page.get_data(as_text=True)
     assert "<script>" not in page.get_data(as_text=True)
